@@ -1,6 +1,6 @@
 {
   "status": "FAILED",
-  "generated_at": "2026-10-26T13:45:27.300169+00:00",
+  "generated_at": "2026-10-26T14:03:58.268845+00:00",
   "warmup_passes": 10,
   "timed_passes": 50,
   "thresholds": {
@@ -22,10 +22,10 @@
         28
       ],
       "file_size_mb": 0.0039,
-      "memory_rss_mb": 5.1953,
-      "mean_latency_ms": 0.0577,
-      "p95_latency_ms": 0.0748,
-      "throughput_fps": 17319.5022,
+      "memory_rss_mb": 5.1562,
+      "mean_latency_ms": 0.0207,
+      "p95_latency_ms": 0.0255,
+      "throughput_fps": 48305.865,
       "parameter_count": 338,
       "thresholds": {
         "max_latency_ms": 5.0,

@@ -33,7 +33,6 @@ jobs:
 
       - name: Run model evaluation
         id: evaluation
-        continue-on-error: true
         run: pixi run eval
 
       - name: Commit telemetry, update dashboard, and auto-merge

@@ -97,6 +97,12 @@ jobs:
             echo "Error: Model evaluation failed threshold gates. Blocking merge."
             exit 1
           fi
+          # Enforce Gating: Fail workflow check and automatically close the PR if evaluation failed
+          if [ "$EVAL_OUTCOME" != "success" ]; then
+            echo "Error: Model evaluation failed threshold gates. Automatically closing PR."
+            gh pr close "$PR_NUMBER" --comment "❌ MLOps Gate: Model failed performance thresholds. Automatically closing PR to protect production." || true
+            exit 1
+          fi
 
           # 5. Auto-merge PR if evaluation passed successfully
           gh pr merge "$PR_NUMBER" --merge --auto || echo "Auto-merge skipped"

@@ -3,7 +3,7 @@ name: Model Evaluation & Gating Pipeline
 on:
   push:
     branches:
-      - 'model/**'  # Triggers automatically whenever you push a branch starting with model/ (e.g., model/my-new-cnn)
+      - 'model/**'
 
 permissions:
   contents: write
@@ -55,28 +55,32 @@ jobs:
           git diff --cached --quiet || git commit -m "chore(telemetry): auto-update model evaluation results [skip ci]"
           git push origin main || echo "Telemetry push skipped"
 
-      - name: Auto-Create Pull Request for Review
+      - name: Auto-Create Pull Request and Capture Number
+        id: create-pr
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Check if a PR already exists for this branch
-          PR_EXIST=$(gh pr list --head "${{ github.ref_name }}" --json number --jq 'length')
+          # Check if PR already exists
+          PR_NUM=$(gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number')
           
-          if [ "$PR_EXIST" -eq 0 ]; then
-            gh pr create --title "feat(model): automated evaluation for ${{ github.ref_name }}" \
-                         --body "Automated MLOps pipeline triggered. Evaluation telemetry has been synchronized to GitHub Pages." \
-                         --base main \
-                         --head "${{ github.ref_name }}"
+          if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
+            PR_NUM=$(gh pr create --title "feat(model): automated evaluation for ${{ github.ref_name }}" \
+                                  --body "Automated MLOps pipeline triggered. Evaluation telemetry synchronized to GitHub Pages." \
+                                  --base main \
+                                  --head "${{ github.ref_name }}" \
+                                  --json number --jq '.number')
           fi
+          
+          echo "PR_NUMBER=$PR_NUM" >> $GITHUB_OUTPUT
+          echo "Active PR Number: $PR_NUM"
 
-      - name: Handle Gating & Auto-Close / Auto-Merge
+      - name: Handle Gating, Commenting, and Auto-Close / Auto-Merge
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.create-pr.outputs.PR_NUMBER }}
           EVAL_OUTCOME: ${{ steps.evaluation.outcome }}
         run: |
-          PR_NUMBER=$(gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number')
-
-          # Generate markdown summary
+          # Generate markdown summary table
           python - <<'PY' > /tmp/eval-summary.md
           import json
           try:
@@ -103,7 +107,7 @@ jobs:
 
           if [ "$EVAL_OUTCOME" != "success" ]; then
             echo "Evaluation failed threshold gates. Automatically closing PR."
-            gh pr close "$PR_NUMBER" --comment "❌ MLOps Gate: Model failed performance thresholds. Automatically closing PR to protect production, but telemetry remains logged on the dashboard."
+            gh pr close "$PR_NUMBER" --comment "❌ MLOps Gate: Model failed performance thresholds. Automatically closing PR to protect production. Telemetry is logged on the dashboard."
             exit 1
           else
             echo "Evaluation passed. Setting auto-merge."

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ModelEval Studio — Automated MLOps Telemetry</title>
+  <!-- Favicon telemetry icon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2306b6d4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 flex flex-col justify-between selection:bg-cyan-500 selection:text-white">
+
+  <main class="w-full px-6 sm:px-10 lg:px-16 py-10 max-w-[1600px] mx-auto">
+    
+    <!-- Header with Theme Toggle -->
+    <header class="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b border-slate-200 dark:border-slate-800/80 pb-8 transition-colors">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <span class="inline-block h-2 w-2 rounded-full bg-cyan-500 dark:bg-cyan-400 animate-pulse"></span>
+          <p class="text-xs font-bold uppercase tracking-[0.3em] text-cyan-600 dark:text-cyan-400">MLOps CI/CD Gating Engine</p>
+        </div>
+        <div class="flex items-center gap-3.5">
+          <div class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 shadow-sm shrink-0">
+            <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Model Evaluation Telemetry</h1>
+        </div>
+        <p class="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl">Continuous performance benchmarks, latency limits, and resource utilization footprints verified autonomously on GitHub Actions.</p>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Status Pill -->
+        <div id="status-container" class="flex items-center gap-3 rounded-full border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80 px-4 py-2 shadow-sm transition-colors">
+          <span id="status-dot" class="h-2.5 w-2.5 rounded-full bg-slate-400"></span>
+          <span id="status-text" class="text-xs sm:text-sm font-bold tracking-wide">LOADING...</span>
+        </div>
+
+        <button onclick="toggleTheme()" aria-label="Toggle Theme" class="flex items-center justify-center h-11 w-11 rounded-full border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 hover:border-cyan-500 transition-all shadow-sm focus:outline-none">
+          <svg id="sun-icon" class="w-5 h-5 text-amber-500 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg id="moon-icon" class="w-5 h-5 text-slate-700 dark:text-slate-300 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Overview Bar -->
+    <section class="mb-10 grid gap-5 sm:grid-cols-3">
+      <div class="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-6 shadow-sm">
+        <p class="text-xs uppercase tracking-widest text-slate-500 font-semibold">Active Models Evaluated</p>
+        <p id="stat-count" class="mt-2 text-3xl font-bold text-cyan-600 dark:text-cyan-400">-</p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-6 shadow-sm">
+        <p class="text-xs uppercase tracking-widest text-slate-500 font-semibold">Benchmark Sample Passes</p>
+        <p id="stat-passes" class="mt-2 text-3xl font-bold">- <span class="text-sm font-normal text-slate-500">iters</span></p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/70 p-6 shadow-sm">
+        <p class="text-xs uppercase tracking-widest text-slate-500 font-semibold">Last Telemetry Sync</p>
+        <p id="stat-updated" class="mt-2 truncate text-sm sm:text-base font-semibold text-cyan-600 dark:text-cyan-300 font-mono">Fetching...</p>
+      </div>
+    </section>
+
+    <!-- Dynamic Cards Container -->
+    <section id="models-grid" class="grid gap-6 lg:grid-cols-2">
+      <div class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center text-slate-500 lg:col-span-2">Loading telemetry data...</div>
+    </section>
+  </main>
+
+  <footer class="w-full border-t border-slate-200 dark:border-slate-800/80 bg-slate-100 dark:bg-slate-900/50 py-8 px-6 text-center text-sm text-slate-500 mt-16">
+    <div class="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p>© 2026 ModelEval Gating Pipeline. All rights reserved.</p>
+      <div class="flex items-center gap-6">
+        <span>Designed by <a href="https://sriramxdev.me" target="_blank" class="text-cyan-600 dark:text-cyan-400 font-semibold hover:underline">Sri Ram Sharma</a></span>
+        <span class="text-slate-300 dark:text-slate-700">•</span>
+        <a href="https://github.com/sriramxdev" target="_blank" class="hover:text-cyan-600 dark:hover:text-cyan-400 font-medium">GitHub: sriramxdev</a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+    async function loadTelemetry() {
+      try {
+        const response = await fetch('./data/results.json?' + new Date().getTime()); // Prevent browser caching
+        const data = await response.json();
+        
+        // Update Status
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        if (data.status === 'PASSED') {
+          statusDot.className = "h-2.5 w-2.5 rounded-full bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_12px_#34d399]";
+          statusText.className = "text-xs sm:text-sm font-bold tracking-wide text-emerald-600 dark:text-emerald-300";
+        } else {
+          statusDot.className = "h-2.5 w-2.5 rounded-full bg-rose-500 dark:bg-rose-400 shadow-[0_0_12px_#fb7185]";
+          statusText.className = "text-xs sm:text-sm font-bold tracking-wide text-rose-600 dark:text-rose-300";
+        }
+        statusText.textContent = data.status;
+
+        // Update Stats
+        document.getElementById('stat-count').textContent = data.models.length;
+        document.getElementById('stat-passes').innerHTML = `${data.timed_passes || 50} <span class="text-sm font-normal text-slate-500">iters</span>`;
+        document.getElementById('stat-updated').textContent = data.generated_at || 'N/A';
+
+        // Render Cards
+        const grid = document.getElementById('models-grid');
+        grid.innerHTML = '';
+
+        if (data.models.length === 0) {
+          grid.innerHTML = `<div class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center text-slate-500 lg:col-span-2">No models found in telemetry.</div>`;
+          return;
+        }
+
+        data.models.forEach(model => {
+          const allValid = Object.values(model.validation).every(Boolean);
+          const valClass = allValid ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20" : "bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-500/20";
+          
+          let metricsHtml = '';
+          const metrics = [
+            ['Mean Latency', model.mean_latency_ms, 'ms', model.validation.latency],
+            ['P95 Latency', model.p95_latency_ms, 'ms', model.validation.p95_latency],
+            ['Throughput', model.throughput_fps, 'FPS', true],
+            ['Memory RSS', model.memory_rss_mb, 'MB', model.validation.memory],
+            ['File Size', model.file_size_mb, 'MB', model.validation.file_size],
+            ['Parameters', model.parameter_count, '', true]
+          ];
+
+          metrics.forEach(([label, val, unit, isValid]) => {
+            const cardStyle = isValid 
+              ? "border-slate-200/60 bg-slate-100 dark:border-slate-800/40 dark:bg-slate-950/40 text-slate-900 dark:text-slate-100" 
+              : "border-rose-500/60 bg-rose-500/10 dark:border-rose-500/60 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.15)]";
+
+            const textStyle = isValid ? "text-slate-500" : "text-rose-500 dark:text-rose-400 font-semibold";
+
+            metricsHtml += `
+              <div class="rounded-xl border p-4 transition-all ${cardStyle}">
+                <div class="flex items-center justify-between">
+                  <p class="text-xs font-medium ${textStyle}">${label}</p>
+                  ${!isValid ? '<span class="text-[10px] font-bold uppercase tracking-wider bg-rose-500 text-white px-1.5 py-0.5 rounded shadow-sm">BREACH</span>' : ''}
+                </div>
+                <p class="mt-1 text-lg sm:text-xl font-bold font-mono">${val} <span class="text-xs font-normal opacity-75">${unit}</span></p>
+              </div>`;
+          });
+
+          const card = document.createElement('article');
+          card.className = "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/90 p-6 sm:p-8 shadow-xl transition-colors";
+          card.innerHTML = `
+            <div class="mb-6 flex items-start justify-between border-b border-slate-100 dark:border-slate-800/50 pb-5">
+              <div>
+                <h2 class="text-xl font-bold tracking-tight">${model.model}</h2>
+                <span class="mt-2.5 inline-flex rounded-full bg-cyan-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-300 border border-cyan-500/20">${model.modality}</span>
+              </div>
+              <span class="rounded-full px-3.5 py-1 text-xs font-bold tracking-wider ${valClass}">${allValid ? 'PASSED' : 'FAILED'}</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">${metricsHtml}</div>`;
+          grid.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error('Failed to load telemetry:', err);
+      }
+    }
+
+    // Initial load + poll every 4 seconds for live updates
+    loadTelemetry();
+    setInterval(loadTelemetry, 4000);
+
+    // Theme toggle script
+    const sunIcon = document.getElementById('sun-icon');
+    const moonIcon = document.getElementById('moon-icon');
+    function updateIcons() {
+      if (document.documentElement.classList.contains('dark')) {
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+      } else {
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+      }
+    }
+    function toggleTheme() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+      updateIcons();
+    }
+    if (localStorage.getItem('theme') === 'light') { document.documentElement.classList.remove('dark'); }
+    else { document.documentElement.classList.add('dark'); }
+    updateIcons();
+  </script>
+</body>
+</html>

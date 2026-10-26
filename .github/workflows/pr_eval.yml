@@ -1,0 +1,88 @@
+name: Model evaluation gate
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@v0.8.2
+        with:
+          pixi-version: latest
+          cache: true
+
+      - name: Generate baseline model when needed
+        run: |
+          if [ -z "$(find models -maxdepth 1 -type f \( -name '*.pt' -o -name '*.pth' -o -name '*.bin' \) -print -quit)" ]; then
+            pixi run python benchmark/train_dummy.py
+          fi
+
+      - name: Run model evaluation
+        id: evaluation
+        continue-on-error: true
+        run: pixi run eval
+
+      - name: Commit telemetry and comment success
+        if: steps.evaluation.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/results.json
+          git diff --cached --quiet || git commit -m "chore: update model evaluation telemetry"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}" || true
+          python - <<'PY' > /tmp/eval-summary.md
+          import json
+          data = json.load(open("data/results.json"))
+          print("## ✅ Model evaluation passed\n")
+          print("| Model | Mean latency | P95 | Throughput | Size | Parameters |")
+          print("|---|---:|---:|---:|---:|---:|")
+          for model in data["models"]:
+              print(f"| {model['model']} | {model['mean_latency_ms']} ms | {model['p95_latency_ms']} ms | {model['throughput_fps']} FPS | {model['file_size_mb']} MB | {model['parameter_count']} |")
+          PY
+          gh pr comment "$PR_NUMBER" --body-file /tmp/eval-summary.md
+          gh pr merge "$PR_NUMBER" --merge --auto
+
+      - name: Commit telemetry and comment success
+        if: steps.evaluation.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Copy frontend template to root so GitHub Pages serves it instantly
+          cp web/templates/index.html ./index.html
+          
+          git add data/results.json index.html
+          git diff --cached --quiet || git commit -m "chore: update model evaluation telemetry and static dashboard"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}" || true
+          
+          python - <<'PY' > /tmp/eval-summary.md
+          import json
+          data = json.load(open("data/results.json"))
+          print("## ✅ Model evaluation passed\n")
+          print("| Model | Mean latency | P95 | Throughput | Size | Parameters |")
+          print("|---|---:|---:|---:|---:|---:|")
+          for model in data["models"]:
+              print(f"| {model['model']} | {model['mean_latency_ms']} ms | {model['p95_latency_ms']} ms | {model['throughput_fps']} FPS | {model['file_size_mb']} MB | {model['parameter_count']} |")
+          PY
+          gh pr comment "$PR_NUMBER" --body-file /tmp/eval-summary.md
+          gh pr merge "$PR_NUMBER" --merge --auto

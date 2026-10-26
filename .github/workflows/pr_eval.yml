@@ -92,12 +92,12 @@ jobs:
           # Post the summary table to the Pull Request
           gh pr comment "$PR_NUMBER" --body-file /tmp/eval-summary.md || echo "Failed to post PR comment"
 
-          # 4. Enforce Gating: Fail workflow check if evaluation failed
+          # 4.1 Enforce Gating: Fail workflow check if evaluation failed
           if [ "$EVAL_OUTCOME" != "success" ]; then
             echo "Error: Model evaluation failed threshold gates. Blocking merge."
             exit 1
           fi
-          # Enforce Gating: Fail workflow check and automatically close the PR if evaluation failed
+          # 4.2 Enforce Gating: Fail workflow check and automatically close the PR if evaluation failed
           if [ "$EVAL_OUTCOME" != "success" ]; then
             echo "Error: Model evaluation failed threshold gates. Automatically closing PR."
             gh pr close "$PR_NUMBER" --comment "❌ MLOps Gate: Model failed performance thresholds. Automatically closing PR to protect production." || true

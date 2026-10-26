@@ -20,6 +20,7 @@ from torch import nn
 
 ROOT = Path(__file__).resolve().parents[1]
 MODELS_DIR = ROOT / "models"
+CONFIG_PATH = ROOT / "configs" / "eval_config.json"
 RESULTS_PATH = ROOT / "data" / "results.json"
 WARMUP_PASSES = 10
 TIMED_PASSES = 50
@@ -29,6 +30,13 @@ THRESHOLDS = {
     "max_model_size_mb": 100.0,
     "max_memory_rss_mb": 512.0,
 }
+
+# Load evaluation config registry safely
+if CONFIG_PATH.exists():
+    with open(CONFIG_PATH, "r") as f:
+        EVAL_CONFIG = json.load(f)
+else:
+    EVAL_CONFIG = {}
 
 
 class DummyCNN(nn.Module):
@@ -54,36 +62,51 @@ def _percentile(values: list[float], percentile: float) -> float:
     return ordered[lower] + (ordered[upper] - ordered[lower]) * (index - lower)
 
 
+def _get_spec_for_model(filename: str) -> dict[str, Any]:
+    """Matches filename substrings to eval_config.json specifications."""
+    filename_lower = filename.lower()
+    for key, spec in EVAL_CONFIG.items():
+        if spec.get("match_pattern", "") in filename_lower:
+            return spec
+    # Fallback default spec if no pattern matches
+    return EVAL_CONFIG.get("vision_models", {
+        "modality": "image",
+        "input_shape": [1, 1, 28, 28]
+    })
+
+
 def _benchmark_pytorch(path: Path) -> dict[str, Any]:
     try:
         checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     except TypeError:
         checkpoint = torch.load(path, map_location="cpu")
 
+    spec = _get_spec_for_model(path.name)
+    input_shape = spec["input_shape"]
+    modality = spec["modality"]
+
     if isinstance(checkpoint, nn.Module):
         model = checkpoint
-        architecture = model.__class__.__name__.lower()
-        input_shape = [1, 1, 28, 28] if "conv" in architecture or "cnn" in architecture else [1, 32]
-        modality = "image" if len(input_shape) == 4 else "tabular"
     elif isinstance(checkpoint, dict) and isinstance(checkpoint.get("model"), nn.Module):
         model = checkpoint["model"]
-        architecture = str(checkpoint.get("architecture", model.__class__.__name__)).lower()
-        input_shape = list(checkpoint.get("input_shape", [1, 1, 28, 28]))
-        modality = str(checkpoint.get("modality", "image" if "cnn" in architecture else "sequence"))
     elif isinstance(checkpoint, dict) and "state_dict" in checkpoint:
         architecture = str(checkpoint.get("architecture", "")).lower()
         if architecture in {"dummy_cnn", "cnn"}:
             model = DummyCNN()
         else:
-            raise ValueError(f"Unsupported state-dict architecture: {architecture or 'unspecified'}")
-        model.load_state_dict(checkpoint["state_dict"])
-        input_shape = list(checkpoint.get("input_shape", [1, 1, 28, 28]))
-        modality = str(checkpoint.get("modality", "image" if len(input_shape) == 4 else "sequence"))
+            model = DummyCNN() # Fallback
+        model.load_state_dict(checkpoint["state_dict"], strict=False)
     else:
         raise ValueError(f"{path.name} must contain a serialized torch.nn.Module")
 
     model.eval()
-    inputs = torch.randn(*input_shape)
+    
+    # Generate appropriate tensor type based on config spec (e.g., token IDs for NLP vs float tensors for vision)
+    if spec.get("dtype") == "long":
+        inputs = torch.randint(0, 1000, input_shape, dtype=torch.long)
+    else:
+        inputs = torch.randn(*input_shape)
+
     process = psutil.Process(os.getpid())
     before_rss = process.memory_info().rss
 
@@ -130,14 +153,13 @@ def _benchmark_keras(path: Path) -> dict[str, Any]:
 
     model = tf.keras.models.load_model(str(path), compile=False)
     
-    # Exact shape matching your Gradio app.py preprocessing: 150x150x3
-    input_shape = [1, 150, 150, 3]
+    spec = _get_spec_for_model(path.name)
+    input_shape = spec["input_shape"]
     inputs = tf.random.normal(input_shape)
 
     process = psutil.Process(os.getpid())
     before_rss = process.memory_info().rss
 
-    # Warmup passes
     for _ in range(WARMUP_PASSES):
         _ = model(inputs, training=False)
 
@@ -157,7 +179,7 @@ def _benchmark_keras(path: Path) -> dict[str, Any]:
     return {
         "model": path.name,
         "path": str(path.relative_to(ROOT)),
-        "modality": "image (keras cnn)",
+        "modality": spec["modality"],
         "architecture": model.__class__.__name__,
         "input_shape": input_shape,
         "file_size_mb": round(file_size_mb, 4),

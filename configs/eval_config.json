@@ -1,0 +1,13 @@
+{
+  "vision_models": {
+    "match_pattern": "cnn",
+    "modality": "image",
+    "input_shape": [1, 1, 28, 28]
+  },
+  "nlp_models": {
+    "match_pattern": "sentiment",
+    "modality": "text (nlp)",
+    "input_shape": [1, 128],
+    "dtype": "long"
+  }
+}

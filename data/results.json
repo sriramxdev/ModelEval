@@ -1,7 +1,75 @@
 {
-  "status": "PENDING",
+  "status": "FAILED",
+  "generated_at": "2026-10-26T07:22:58.081329+00:00",
+  "warmup_passes": 10,
   "timed_passes": 50,
-  "generated_at": null,
-  "models": [],
+  "thresholds": {
+    "max_latency_ms": 5.0,
+    "max_p95_latency_ms": 500.0,
+    "max_model_size_mb": 100.0,
+    "max_memory_rss_mb": 512.0
+  },
+  "models": [
+    {
+      "model": "baseline_model.pt",
+      "path": "models/baseline_model.pt",
+      "modality": "image",
+      "architecture": "DummyCNN",
+      "input_shape": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "file_size_mb": 0.0039,
+      "memory_rss_mb": 5.1953,
+      "mean_latency_ms": 0.0763,
+      "p95_latency_ms": 0.1088,
+      "throughput_fps": 13104.5042,
+      "parameter_count": 338,
+      "thresholds": {
+        "max_latency_ms": 5.0,
+        "max_p95_latency_ms": 500.0,
+        "max_model_size_mb": 100.0,
+        "max_memory_rss_mb": 512.0
+      },
+      "validation": {
+        "latency": true,
+        "p95_latency": true,
+        "file_size": true,
+        "memory": true
+      }
+    },
+    {
+      "model": "cats_dogs.keras",
+      "path": "models/cats_dogs.keras",
+      "modality": "image (keras cnn)",
+      "architecture": "Sequential",
+      "input_shape": [
+        1,
+        150,
+        150,
+        3
+      ],
+      "file_size_mb": 39.6033,
+      "memory_rss_mb": 7.6953,
+      "mean_latency_ms": 17.7462,
+      "p95_latency_ms": 18.2522,
+      "throughput_fps": 56.3501,
+      "parameter_count": 3454529,
+      "thresholds": {
+        "max_latency_ms": 5.0,
+        "max_p95_latency_ms": 500.0,
+        "max_model_size_mb": 100.0,
+        "max_memory_rss_mb": 512.0
+      },
+      "validation": {
+        "latency": false,
+        "p95_latency": true,
+        "file_size": true,
+        "memory": true
+      }
+    }
+  ],
   "errors": []
 }

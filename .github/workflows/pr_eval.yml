@@ -36,7 +36,7 @@ jobs:
         continue-on-error: true
         run: pixi run eval
 
-      - name: Commit telemetry, update dashboard, and report status
+      - name: Publish Telemetry to Main & Report PR Status
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
@@ -45,18 +45,26 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          # Ensure root index.html is synced with the latest dashboard template
+
+          # 1. Save the generated results.json temporarily
+          cp data/results.json /tmp/results.json
+
+          # 2. Switch to main branch and update results.json directly
+          git fetch origin main
+          git checkout main
+          git pull origin main
+
+          # Ensure index.html and results.json are synced on main for GitHub Pages
           if [ -f "web/templates/index.html" ]; then
             cp web/templates/index.html ./index.html
           fi
-          
-          # Stage and commit the generated results and dashboard
-          git add data/results.json index.html
-          git diff --cached --quiet || git commit -m "chore: auto-update model evaluation telemetry report"
-          git push origin "HEAD:${{ github.event.pull_request.head.ref }}" || true
+          cp /tmp/results.json data/results.json
 
-          # Generate markdown summary table for the PR comment
+          git add data/results.json index.html
+          git diff --cached --quiet || git commit -m "chore(telemetry): auto-update model evaluation results [skip ci]"
+          git push origin main || echo "Failed to push telemetry to main"
+
+          # 3. Generate markdown summary table for the PR comment
           python - <<'PY' > /tmp/eval-summary.md
           import json
           try:
@@ -78,17 +86,17 @@ jobs:
               m_status = "PASSED" if all_valid else "FAILED"
               print(f"| `{model.get('model')}` | {model.get('mean_latency_ms', 'N/A')} ms | {model.get('p95_latency_ms', 'N/A')} ms | {model.get('throughput_fps', 'N/A')} FPS | {model.get('file_size_mb', 'N/A')} MB | {model.get('parameter_count', 'N/A')} | **{m_status}** |")
           
-          print("\n*Automated performance benchmark verified via GitHub Actions.*")
+          print("\n*Telemetry synchronized to GitHub Pages. Model binary gating enforced.*")
           PY
 
           # Post the summary table to the Pull Request
           gh pr comment "$PR_NUMBER" --body-file /tmp/eval-summary.md || echo "Failed to post PR comment"
 
-          # Enforce the gating check: fail workflow if evaluation outcome failed
+          # 4. Enforce Gating: Fail workflow check if evaluation failed
           if [ "$EVAL_OUTCOME" != "success" ]; then
-            echo "Error: Model evaluation failed threshold gates."
+            echo "Error: Model evaluation failed threshold gates. Blocking merge."
             exit 1
           fi
 
-          # Auto-merge if evaluation passed successfully
-          gh pr merge "$PR_NUMBER" --merge --auto || echo "Auto-merge configuration skipped"
+          # 5. Auto-merge PR if evaluation passed successfully
+          gh pr merge "$PR_NUMBER" --merge --auto || echo "Auto-merge skipped"

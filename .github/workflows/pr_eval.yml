@@ -1,22 +1,21 @@
-name: Model evaluation gate
+name: Model Evaluation & Gating Pipeline
 
 on:
-  pull_request:
-    branches: [ main ]
-    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - 'model/**'  # Triggers automatically whenever you push a branch starting with model/ (e.g., model/my-new-cnn)
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  evaluate:
+  evaluate-and-gate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout pull request
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Set up Pixi
@@ -36,25 +35,17 @@ jobs:
         continue-on-error: true
         run: pixi run eval
 
-      - name: Publish Telemetry to Main & Report PR Status
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          EVAL_OUTCOME: ${{ steps.evaluation.outcome }}
+      - name: Publish Telemetry to Main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # 1. Save the generated results.json temporarily
           cp data/results.json /tmp/results.json
 
-          # 2. Switch to main branch and update results.json directly
           git fetch origin main
           git checkout main
           git pull origin main
 
-          # Ensure index.html and results.json are synced on main for GitHub Pages
           if [ -f "web/templates/index.html" ]; then
             cp web/templates/index.html ./index.html
           fi
@@ -62,9 +53,30 @@ jobs:
 
           git add data/results.json index.html
           git diff --cached --quiet || git commit -m "chore(telemetry): auto-update model evaluation results [skip ci]"
-          git push origin main || echo "Failed to push telemetry to main"
+          git push origin main || echo "Telemetry push skipped"
 
-          # 3. Generate markdown summary table for the PR comment
+      - name: Auto-Create Pull Request for Review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Check if a PR already exists for this branch
+          PR_EXIST=$(gh pr list --head "${{ github.ref_name }}" --json number --jq 'length')
+          
+          if [ "$PR_EXIST" -eq 0 ]; then
+            gh pr create --title "feat(model): automated evaluation for ${{ github.ref_name }}" \
+                         --body "Automated MLOps pipeline triggered. Evaluation telemetry has been synchronized to GitHub Pages." \
+                         --base main \
+                         --head "${{ github.ref_name }}"
+          fi
+
+      - name: Handle Gating & Auto-Close / Auto-Merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVAL_OUTCOME: ${{ steps.evaluation.outcome }}
+        run: |
+          PR_NUMBER=$(gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number')
+
+          # Generate markdown summary
           python - <<'PY' > /tmp/eval-summary.md
           import json
           try:
@@ -85,24 +97,15 @@ jobs:
               all_valid = all(val.values()) if val else False
               m_status = "PASSED" if all_valid else "FAILED"
               print(f"| `{model.get('model')}` | {model.get('mean_latency_ms', 'N/A')} ms | {model.get('p95_latency_ms', 'N/A')} ms | {model.get('throughput_fps', 'N/A')} FPS | {model.get('file_size_mb', 'N/A')} MB | {model.get('parameter_count', 'N/A')} | **{m_status}** |")
-          
-          print("\n*Telemetry synchronized to GitHub Pages. Model binary gating enforced.*")
           PY
 
-          # Post the summary table to the Pull Request
-          gh pr comment "$PR_NUMBER" --body-file /tmp/eval-summary.md || echo "Failed to post PR comment"
+          gh pr comment "$PR_NUMBER" --body-file /tmp/eval-summary.md
 
-          # 4.1 Enforce Gating: Fail workflow check if evaluation failed
           if [ "$EVAL_OUTCOME" != "success" ]; then
-            echo "Error: Model evaluation failed threshold gates. Blocking merge."
+            echo "Evaluation failed threshold gates. Automatically closing PR."
+            gh pr close "$PR_NUMBER" --comment "❌ MLOps Gate: Model failed performance thresholds. Automatically closing PR to protect production, but telemetry remains logged on the dashboard."
             exit 1
+          else
+            echo "Evaluation passed. Setting auto-merge."
+            gh pr merge "$PR_NUMBER" --merge --auto || true
           fi
-          # 4.2 Enforce Gating: Fail workflow check and automatically close the PR if evaluation failed
-          if [ "$EVAL_OUTCOME" != "success" ]; then
-            echo "Error: Model evaluation failed threshold gates. Automatically closing PR."
-            gh pr close "$PR_NUMBER" --comment "❌ MLOps Gate: Model failed performance thresholds. Automatically closing PR to protect production." || true
-            exit 1
-          fi
-
-          # 5. Auto-merge PR if evaluation passed successfully
-          gh pr merge "$PR_NUMBER" --merge --auto || echo "Auto-merge skipped"

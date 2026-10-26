@@ -118,5 +118,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "Cleaning up remote branch: ${{ github.ref_name }}"
-          git push origin --delete "${{ github.ref_name }}" || echo "Branch already deleted or cleaned up"
+          BRANCH_NAME="${{ github.ref_name }}"
+          echo "Cleaning up remote branch: $BRANCH_NAME"
+          git push origin --delete "$BRANCH_NAME" || echo "Branch already deleted or cleaned up"

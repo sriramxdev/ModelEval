@@ -40,12 +40,19 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Temporarily copy results.json outside the repo workspace
           cp data/results.json /tmp/results.json
 
+          # Discard any local modifications so git checkout doesn't fail
+          git checkout -- .
+          git clean -fd
+
+          # Fetch and switch to main
           git fetch origin main
           git checkout main
           git pull origin main
 
+          # Restore index.html and the freshly evaluated results.json
           if [ -f "web/templates/index.html" ]; then
             cp web/templates/index.html ./index.html
           fi

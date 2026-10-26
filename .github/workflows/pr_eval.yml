@@ -63,16 +63,16 @@ jobs:
           PR_NUM=$(gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number')
           
           if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
-            PR_NUM=$(gh pr create --title "feat(model): automated evaluation for ${{ github.ref_name }}" \
+            PR_URL=$(gh pr create --title "feat(model): automated evaluation for ${{ github.ref_name }}" \
                                   --body "Automated MLOps pipeline triggered. Evaluation telemetry synchronized to GitHub Pages." \
                                   --base main \
-                                  --head "${{ github.ref_name }}" \
-                                  --json number --jq '.number')
+                                  --head "${{ github.ref_name }}")
+            # Extract the PR number from the returned GitHub URL or query list as fallback
+            PR_NUM=$(echo "$PR_URL" | grep -oE '[0-9]+$' || gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number')
           fi
           
           echo "PR_NUMBER=$PR_NUM" >> $GITHUB_OUTPUT
           echo "Active PR Number: $PR_NUM"
-
       - name: Handle Gating, Commenting, and Auto-Close / Auto-Merge
         id: gating
         env:

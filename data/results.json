@@ -1,6 +1,6 @@
 {
   "status": "FAILED",
-  "generated_at": "2026-10-26T11:04:26.248366+00:00",
+  "generated_at": "2026-10-26T11:18:17.559591+00:00",
   "warmup_passes": 10,
   "timed_passes": 50,
   "thresholds": {
@@ -22,10 +22,10 @@
         28
       ],
       "file_size_mb": 0.0039,
-      "memory_rss_mb": 5.1562,
-      "mean_latency_ms": 0.0202,
-      "p95_latency_ms": 0.0208,
-      "throughput_fps": 49557.7467,
+      "memory_rss_mb": 5.1719,
+      "mean_latency_ms": 0.0192,
+      "p95_latency_ms": 0.0199,
+      "throughput_fps": 51986.9949,
       "parameter_count": 338,
       "thresholds": {
         "max_latency_ms": 5.0,
@@ -41,8 +41,8 @@
       }
     },
     {
-      "model": "cats_dogs_savedmodel.keras",
-      "path": "models/cats_dogs_savedmodel.keras",
+      "model": "cnn_v1.keras",
+      "path": "models/cnn_v1.keras",
       "modality": "image (keras cnn)",
       "architecture": "Sequential",
       "input_shape": [
@@ -52,10 +52,10 @@
         3
       ],
       "file_size_mb": 39.6033,
-      "memory_rss_mb": 7.8672,
-      "mean_latency_ms": 7.0346,
-      "p95_latency_ms": 7.414,
-      "throughput_fps": 142.1538,
+      "memory_rss_mb": 7.8555,
+      "mean_latency_ms": 7.8519,
+      "p95_latency_ms": 8.0438,
+      "throughput_fps": 127.3584,
       "parameter_count": 3454529,
       "thresholds": {
         "max_latency_ms": 5.0,

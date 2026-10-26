@@ -1,6 +1,6 @@
 {
-  "status": "FAILED",
-  "generated_at": "2026-10-26T14:03:58.268845+00:00",
+  "status": "PASSED",
+  "generated_at": "2026-10-26T14:20:30.237374+00:00",
   "warmup_passes": 10,
   "timed_passes": 50,
   "thresholds": {
@@ -22,10 +22,10 @@
         28
       ],
       "file_size_mb": 0.0039,
-      "memory_rss_mb": 5.1562,
-      "mean_latency_ms": 0.0207,
-      "p95_latency_ms": 0.0255,
-      "throughput_fps": 48305.865,
+      "memory_rss_mb": 5.2031,
+      "mean_latency_ms": 0.0205,
+      "p95_latency_ms": 0.0222,
+      "throughput_fps": 48813.6335,
       "parameter_count": 338,
       "thresholds": {
         "max_latency_ms": 5.0,
@@ -39,12 +39,37 @@
         "file_size": true,
         "memory": true
       }
-    }
-  ],
-  "errors": [
+    },
     {
       "model": "cnn_test.keras",
-      "error": "Exception encountered when calling Sequential.call().\n\n\u001b[1mInput 0 with name 'None' of layer 'conv2d_4' is incompatible with the layer: expected axis -1 of input shape to have value 3, but received input with shape (1, 1, 28, 28)\u001b[0m\n\nArguments received by Sequential.call():\n  \u2022 inputs=tf.Tensor(shape=(1, 1, 28, 28), dtype=float32)\n  \u2022 training=False\n  \u2022 mask=None\n  \u2022 kwargs=<class 'inspect._empty'>"
+      "path": "models/cnn_test.keras",
+      "modality": "image (keras cnn)",
+      "architecture": "Sequential",
+      "input_shape": [
+        1,
+        150,
+        150,
+        3
+      ],
+      "file_size_mb": 39.6033,
+      "memory_rss_mb": 7.875,
+      "mean_latency_ms": 8.1077,
+      "p95_latency_ms": 8.6385,
+      "throughput_fps": 123.3403,
+      "parameter_count": 3454529,
+      "thresholds": {
+        "max_latency_ms": 30.0,
+        "max_p95_latency_ms": 500.0,
+        "max_model_size_mb": 100.0,
+        "max_memory_rss_mb": 512.0
+      },
+      "validation": {
+        "latency": true,
+        "p95_latency": true,
+        "file_size": true,
+        "memory": true
+      }
     }
-  ]
+  ],
+  "errors": []
 }

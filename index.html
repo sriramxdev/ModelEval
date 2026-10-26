@@ -98,7 +98,7 @@
 
         // Update Stats
         document.getElementById('stat-count').textContent = data.models.length;
-        document.getElementById('stat-passes').innerHTML = `${data.timed_passes || 50} <span class="text-sm font-normal text-slate-500">iters</span>`;
+        document.getElementById('stat-passes').innerHTML = `${data.timed_passes || 50} <span class="text-sm font-normal text-slate-500">iterations</span>`;
         document.getElementById('stat-updated').textContent = data.generated_at || 'N/A';
 
         // Render Cards

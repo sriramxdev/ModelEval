@@ -24,7 +24,9 @@ CONFIG_PATH = ROOT / "configs" / "eval_config.json"
 RESULTS_PATH = ROOT / "data" / "results.json"
 WARMUP_PASSES = 10
 TIMED_PASSES = 50
-THRESHOLDS = {
+
+# Fallback global thresholds if config doesn't specify them
+DEFAULT_THRESHOLDS = {
     "max_latency_ms": 5.0,
     "max_p95_latency_ms": 500.0,
     "max_model_size_mb": 100.0,
@@ -69,10 +71,11 @@ def _get_spec_for_model(filename: str) -> dict[str, Any]:
         if spec.get("match_pattern", "") in filename_lower:
             return spec
     # Fallback default spec if no pattern matches
-    return EVAL_CONFIG.get("vision_models", {
+    return {
         "modality": "image",
-        "input_shape": [1, 1, 28, 28]
-    })
+        "input_shape": [1, 1, 28, 28],
+        "thresholds": DEFAULT_THRESHOLDS
+    }
 
 
 def _benchmark_pytorch(path: Path) -> dict[str, Any]:
@@ -84,6 +87,7 @@ def _benchmark_pytorch(path: Path) -> dict[str, Any]:
     spec = _get_spec_for_model(path.name)
     input_shape = spec["input_shape"]
     modality = spec["modality"]
+    thresholds = spec.get("thresholds", DEFAULT_THRESHOLDS)
 
     if isinstance(checkpoint, nn.Module):
         model = checkpoint
@@ -101,7 +105,6 @@ def _benchmark_pytorch(path: Path) -> dict[str, Any]:
 
     model.eval()
     
-    # Generate appropriate tensor type based on config spec (e.g., token IDs for NLP vs float tensors for vision)
     if spec.get("dtype") == "long":
         inputs = torch.randint(0, 1000, input_shape, dtype=torch.long)
     else:
@@ -138,12 +141,12 @@ def _benchmark_pytorch(path: Path) -> dict[str, Any]:
         "p95_latency_ms": round(p95_latency, 4),
         "throughput_fps": round(1000 / mean_latency, 4) if mean_latency else 0.0,
         "parameter_count": parameter_count,
-        "thresholds": THRESHOLDS,
+        "thresholds": thresholds,
         "validation": {
-            "latency": mean_latency < THRESHOLDS["max_latency_ms"],
-            "p95_latency": p95_latency < THRESHOLDS["max_p95_latency_ms"],
-            "file_size": file_size_mb < THRESHOLDS["max_model_size_mb"],
-            "memory": rss_mb < THRESHOLDS["max_memory_rss_mb"],
+            "latency": mean_latency < thresholds["max_latency_ms"],
+            "p95_latency": p95_latency < thresholds["max_p95_latency_ms"],
+            "file_size": file_size_mb < thresholds["max_model_size_mb"],
+            "memory": rss_mb < thresholds["max_memory_rss_mb"],
         },
     }
 
@@ -155,6 +158,7 @@ def _benchmark_keras(path: Path) -> dict[str, Any]:
     
     spec = _get_spec_for_model(path.name)
     input_shape = spec["input_shape"]
+    thresholds = spec.get("thresholds", DEFAULT_THRESHOLDS)
     inputs = tf.random.normal(input_shape)
 
     process = psutil.Process(os.getpid())
@@ -188,12 +192,12 @@ def _benchmark_keras(path: Path) -> dict[str, Any]:
         "p95_latency_ms": round(p95_latency, 4),
         "throughput_fps": round(1000 / mean_latency, 4) if mean_latency else 0.0,
         "parameter_count": parameter_count,
-        "thresholds": THRESHOLDS,
+        "thresholds": thresholds,
         "validation": {
-            "latency": mean_latency < THRESHOLDS["max_latency_ms"],
-            "p95_latency": p95_latency < THRESHOLDS["max_p95_latency_ms"],
-            "file_size": file_size_mb < THRESHOLDS["max_model_size_mb"],
-            "memory": rss_mb < THRESHOLDS["max_memory_rss_mb"],
+            "latency": mean_latency < thresholds["max_latency_ms"],
+            "p95_latency": p95_latency < thresholds["max_p95_latency_ms"],
+            "file_size": file_size_mb < thresholds["max_model_size_mb"],
+            "memory": rss_mb < thresholds["max_memory_rss_mb"],
         },
     }
 
@@ -229,7 +233,7 @@ def main() -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "warmup_passes": WARMUP_PASSES,
         "timed_passes": TIMED_PASSES,
-        "thresholds": THRESHOLDS,
+        "thresholds": DEFAULT_THRESHOLDS,
         "models": results,
         "errors": errors,
     }

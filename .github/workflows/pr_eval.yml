@@ -60,7 +60,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Check if PR already exists
           PR_NUM=$(gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number')
           
           if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
@@ -75,12 +74,12 @@ jobs:
           echo "Active PR Number: $PR_NUM"
 
       - name: Handle Gating, Commenting, and Auto-Close / Auto-Merge
+        id: gating
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.create-pr.outputs.PR_NUMBER }}
           EVAL_OUTCOME: ${{ steps.evaluation.outcome }}
         run: |
-          # Generate markdown summary table
           python - <<'PY' > /tmp/eval-summary.md
           import json
           try:
@@ -113,3 +112,11 @@ jobs:
             echo "Evaluation passed. Setting auto-merge."
             gh pr merge "$PR_NUMBER" --merge --auto || true
           fi
+
+      - name: Delete Remote Feature Branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Cleaning up remote branch: ${{ github.ref_name }}"
+          git push origin --delete "${{ github.ref_name }}" || echo "Branch already deleted or cleaned up"

@@ -33,13 +33,15 @@ jobs:
 
       - name: Run model evaluation
         id: evaluation
+        continue-on-error: true
         run: pixi run eval
 
-      - name: Commit telemetry, update dashboard, and auto-merge
-        if: steps.evaluation.outcome == 'success'
+      - name: Commit telemetry, update dashboard, and report status
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          EVAL_OUTCOME: ${{ steps.evaluation.outcome }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -49,19 +51,44 @@ jobs:
             cp web/templates/index.html ./index.html
           fi
           
+          # Stage and commit the generated results and dashboard
           git add data/results.json index.html
-          git diff --cached --quiet || git commit -m "chore: update model evaluation telemetry and static dashboard"
+          git diff --cached --quiet || git commit -m "chore: auto-update model evaluation telemetry report"
           git push origin "HEAD:${{ github.event.pull_request.head.ref }}" || true
-          
+
+          # Generate markdown summary table for the PR comment
           python - <<'PY' > /tmp/eval-summary.md
           import json
-          data = json.load(open("data/results.json"))
-          print("## ✅ Model evaluation passed\n")
-          print("| Model | Mean latency | P95 | Throughput | Size | Parameters |")
-          print("|---|---:|---:|---:|---:|---:|")
-          for model in data["models"]:
-              print(f"| {model['model']} | {model['mean_latency_ms']} ms | {model['p95_latency_ms']} ms | {model['throughput_fps']} FPS | {model['file_size_mb']} MB | {model['parameter_count']} |")
-          PY
+          try:
+              with open("data/results.json", "r") as f:
+                  data = json.load(f)
+              status = data.get("status", "FAILED")
+          except Exception:
+              status = "FAILED"
+              data = {"models": []}
+
+          icon = "✅" if status == "PASSED" else "❌"
+          print(f"## {icon} MLOps Gating Report: Status — **{status}**\n")
+          print("| Model | Mean Latency | P95 Latency | Throughput | File Size | Parameters | Status |")
+          print("|---|---:|---:|---:|---:|---:|---|")
           
-          gh pr comment "$PR_NUMBER" --body-file /tmp/eval-summary.md
-          gh pr merge "$PR_NUMBER" --merge --auto
+          for model in data.get("models", []):
+              val = model.get("validation", {})
+              all_valid = all(val.values()) if val else False
+              m_status = "PASSED" if all_valid else "FAILED"
+              print(f"| `{model.get('model')}` | {model.get('mean_latency_ms', 'N/A')} ms | {model.get('p95_latency_ms', 'N/A')} ms | {model.get('throughput_fps', 'N/A')} FPS | {model.get('file_size_mb', 'N/A')} MB | {model.get('parameter_count', 'N/A')} | **{m_status}** |")
+          
+          print("\n*Automated performance benchmark verified via GitHub Actions.*")
+          PY
+
+          # Post the summary table to the Pull Request
+          gh pr comment "$PR_NUMBER" --body-file /tmp/eval-summary.md || echo "Failed to post PR comment"
+
+          # Enforce the gating check: fail workflow if evaluation outcome failed
+          if [ "$EVAL_OUTCOME" != "success" ]; then
+            echo "Error: Model evaluation failed threshold gates."
+            exit 1
+          fi
+
+          # Auto-merge if evaluation passed successfully
+          gh pr merge "$PR_NUMBER" --merge --auto || echo "Auto-merge configuration skipped"

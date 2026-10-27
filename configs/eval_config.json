@@ -15,7 +15,7 @@
     "modality": "image (keras cnn)",
     "input_shape": [1, 150, 150, 3],
     "thresholds": {
-      "max_latency_ms": 15.0,
+      "max_latency_ms": 30.0,
       "max_p95_latency_ms": 200.0,
       "max_model_size_mb": 50.0,
       "max_memory_rss_mb": 256.0

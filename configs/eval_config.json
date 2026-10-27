@@ -22,7 +22,7 @@
     }
   },
   "cnn_v2_models": {
-    "match_pattern": "cnnv2",
+    "match_pattern": "v2_img",
     "modality": "image (keras cnn)",
     "input_shape": [1, 150, 150, 3],
     "thresholds": {
@@ -45,7 +45,7 @@
     }
   },
   "nlp_v2_models": {
-    "match_pattern": "sentimentv2",
+    "match_pattern": "brts",
     "modality": "text (nlp)",
     "input_shape": [1, 128],
     "dtype": "long",

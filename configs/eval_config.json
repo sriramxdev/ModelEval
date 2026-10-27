@@ -11,7 +11,7 @@
     }
   },
   "keras_cnn_models": {
-    "match_pattern": "cnn",
+    "match_pattern": "image_classification",
     "modality": "image (keras cnn)",
     "input_shape": [1, 150, 150, 3],
     "thresholds": {

@@ -80,6 +80,7 @@ jobs:
           
           echo "PR_NUMBER=$PR_NUM" >> $GITHUB_OUTPUT
           echo "Active PR Number: $PR_NUM"
+
       - name: Handle Gating, Commenting, and Auto-Close / Auto-Merge
         id: gating
         env:
@@ -111,9 +112,12 @@ jobs:
 
           gh pr comment "$PR_NUMBER" --body-file /tmp/eval-summary.md
 
-          if [ "$EVAL_OUTCOME" != "success" ]; then
+          # Read status directly from the freshly generated results.json file
+          PYTHON_STATUS=$(python -c 'import json; print(json.load(open("data/results.json"))["status"])')
+
+          if [ "$PYTHON_STATUS" != "PASSED" ]; then
             echo "Evaluation failed threshold gates. Automatically closing PR."
-            gh pr close "$PR_NUMBER" --comment "❌ MLOps Gate: Model failed performance thresholds. Automatically closing PR to protect production. Telemetry is logged on the dashboard."
+            gh pr close "$PR_NUMBER" --comment "❌ MLOps Gate: One or more models failed performance thresholds. Automatically closing PR to protect production. Full telemetry is logged on the dashboard."
             exit 1
           else
             echo "Evaluation passed. Setting auto-merge."

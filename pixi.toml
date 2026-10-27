@@ -15,7 +15,11 @@ jinja2 = "*"
 
 [pypi-dependencies]
 tensorflow = ">=2.15.0"
+transformers = "*"
+datasets = "*"
+scikit-learn = "*"
 
 [tasks]
 eval = { cmd = "python benchmark/evaluate.py", description = "Benchmark all models and write telemetry" }
 web = { cmd = "uvicorn web.app:app --host 0.0.0.0 --port 8000 --reload", description = "Run the telemetry dashboard" }
+train = { cmd = "jupyter nbconvert --to notebook --execute training/train_sentiment.ipynb --inplace", description = "Execute sentiment training notebook" }

@@ -13,7 +13,7 @@
   "keras_cnn_models": {
     "match_pattern": "cnn",
     "modality": "image (keras cnn)",
-    "input_shape": [1, 1, 28, 28],
+    "input_shape": [1, 150, 150, 3],
     "thresholds": {
       "max_latency_ms": 15.0,
       "max_p95_latency_ms": 200.0,
@@ -24,7 +24,7 @@
   "cnn_v2_models": {
     "match_pattern": "cnnv2",
     "modality": "image (keras cnn)",
-    "input_shape": [1, 1, 28, 28],
+    "input_shape": [1, 150, 150, 3],
     "thresholds": {
       "max_latency_ms": 5.0,
       "max_p95_latency_ms": 200.0,

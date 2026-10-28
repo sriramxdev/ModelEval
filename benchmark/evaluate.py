@@ -103,23 +103,35 @@ def _benchmark_pytorch(path: Path) -> dict[str, Any]:
     else:
         raise ValueError(f"{path.name} must contain a serialized torch.nn.Module")
 
-    # --- COMPREHENSIVE ATTRIBUTE FIX FOR TRANSFORMERS / BERT ---
-    if hasattr(model, "config"):
-        if not hasattr(model.config, "torchscript"):
-            model.config.torchscript = False
-        if not hasattr(model.config, "return_dict"):
-            model.config.return_dict = False
-        if not hasattr(model.config, "_attn_implementation"):
-            model.config._attn_implementation = "eager"
-
-    # Set missing runtime attributes on the model and all submodules
-    for module in model.modules():
-        if not hasattr(module, "attn_implementation"):
-            module.attn_implementation = "eager"
-        if not hasattr(module, "_attn_implementation"):
-            module._attn_implementation = "eager"
-        if not hasattr(module, "position_embedding_type"):
-            module.position_embedding_type = "absolute"
+    # --- CLEAN HUGGING FACE BERT RECONSTRUCTION ---
+    # If it's a Hugging Face BERT model pickled from an older version,
+    # pull its state_dict and load into a clean, modern architecture.
+    if "bert" in path.name.lower() or hasattr(model, "bert"):
+        try:
+            from transformers import AutoConfig, AutoModelForSequenceClassification
+            state_dict = model.state_dict()
+            num_labels = getattr(getattr(model, "config", None), "num_labels", 2)
+            config = AutoConfig.from_pretrained("prajjwal1/bert-mini", num_labels=num_labels)
+            fresh_model = AutoModelForSequenceClassification.from_config(config)
+            fresh_model.load_state_dict(state_dict, strict=False)
+            model = fresh_model
+        except Exception:
+            # Fallback attribute patching if transformers / internet is offline
+            for module in model.modules():
+                if not hasattr(module, "gradient_checkpointing"):
+                    module.gradient_checkpointing = False
+                if not hasattr(module, "attn_implementation"):
+                    module.attn_implementation = "eager"
+                if not hasattr(module, "_attn_implementation"):
+                    module._attn_implementation = "eager"
+                if not hasattr(module, "position_embedding_type"):
+                    module.position_embedding_type = "absolute"
+                if not hasattr(module, "is_decoder"):
+                    module.is_decoder = False
+            if hasattr(model, "config"):
+                model.config.torchscript = False
+                model.config.return_dict = False
+                model.config._attn_implementation = "eager"
 
     model.eval()
     

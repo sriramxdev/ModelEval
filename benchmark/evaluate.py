@@ -103,6 +103,13 @@ def _benchmark_pytorch(path: Path) -> dict[str, Any]:
     else:
         raise ValueError(f"{path.name} must contain a serialized torch.nn.Module")
 
+    # Insert right before model.eval():
+    if hasattr(model, "config"):
+        if not hasattr(model.config, "torchscript"):
+            model.config.torchscript = False
+        if not hasattr(model.config, "return_dict"):
+            model.config.return_dict = False
+
     model.eval()
     
     if spec.get("dtype") == "long":

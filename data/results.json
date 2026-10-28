@@ -1,6 +1,6 @@
 {
   "status": "FAILED",
-  "generated_at": "2026-10-28T01:12:29.803065+00:00",
+  "generated_at": "2026-10-28T01:16:56.539523+00:00",
   "warmup_passes": 10,
   "timed_passes": 50,
   "thresholds": {
@@ -22,10 +22,10 @@
         28
       ],
       "file_size_mb": 0.0039,
-      "memory_rss_mb": 5.168,
-      "mean_latency_ms": 0.0541,
-      "p95_latency_ms": 0.0605,
-      "throughput_fps": 18492.5126,
+      "memory_rss_mb": 5.1484,
+      "mean_latency_ms": 0.0351,
+      "p95_latency_ms": 0.0442,
+      "throughput_fps": 28520.3527,
       "parameter_count": 338,
       "thresholds": {
         "max_latency_ms": 5.0,
@@ -52,10 +52,10 @@
         3
       ],
       "file_size_mb": 39.6033,
-      "memory_rss_mb": 7.8594,
-      "mean_latency_ms": 17.1023,
-      "p95_latency_ms": 17.2966,
-      "throughput_fps": 58.4717,
+      "memory_rss_mb": 7.7461,
+      "mean_latency_ms": 13.4602,
+      "p95_latency_ms": 13.7477,
+      "throughput_fps": 74.2929,
       "parameter_count": 3454529,
       "thresholds": {
         "max_latency_ms": 30.0,
@@ -74,7 +74,7 @@
   "errors": [
     {
       "model": "bert-mini-sentiment_classifier.pt",
-      "error": "'BertModel' object has no attribute 'attn_implementation'"
+      "error": "'BertEncoder' object has no attribute 'gradient_checkpointing'"
     }
   ]
 }

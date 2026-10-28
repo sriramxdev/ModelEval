@@ -1,6 +1,6 @@
 {
-  "status": "FAILED",
-  "generated_at": "2026-10-28T01:16:56.539523+00:00",
+  "status": "PASSED",
+  "generated_at": "2026-10-28T01:21:37.184802+00:00",
   "warmup_passes": 10,
   "timed_passes": 50,
   "thresholds": {
@@ -22,16 +22,44 @@
         28
       ],
       "file_size_mb": 0.0039,
-      "memory_rss_mb": 5.1484,
-      "mean_latency_ms": 0.0351,
-      "p95_latency_ms": 0.0442,
-      "throughput_fps": 28520.3527,
+      "memory_rss_mb": 5.1992,
+      "mean_latency_ms": 0.0367,
+      "p95_latency_ms": 0.039,
+      "throughput_fps": 27279.6067,
       "parameter_count": 338,
       "thresholds": {
         "max_latency_ms": 5.0,
         "max_p95_latency_ms": 500.0,
         "max_model_size_mb": 100.0,
         "max_memory_rss_mb": 512.0
+      },
+      "validation": {
+        "latency": true,
+        "p95_latency": true,
+        "file_size": true,
+        "memory": true
+      }
+    },
+    {
+      "model": "bert-mini-sentiment_classifier.pt",
+      "path": "models/bert-mini-sentiment_classifier.pt",
+      "modality": "text (nlp)",
+      "architecture": "BertForSequenceClassification",
+      "input_shape": [
+        1,
+        128
+      ],
+      "file_size_mb": 16.769,
+      "memory_rss_mb": 17.457,
+      "mean_latency_ms": 1.3005,
+      "p95_latency_ms": 1.3915,
+      "throughput_fps": 768.9585,
+      "parameter_count": 4386178,
+      "thresholds": {
+        "max_latency_ms": 30.0,
+        "max_p95_latency_ms": 200.0,
+        "max_model_size_mb": 50.0,
+        "max_memory_rss_mb": 256.0
       },
       "validation": {
         "latency": true,
@@ -52,10 +80,10 @@
         3
       ],
       "file_size_mb": 39.6033,
-      "memory_rss_mb": 7.7461,
-      "mean_latency_ms": 13.4602,
-      "p95_latency_ms": 13.7477,
-      "throughput_fps": 74.2929,
+      "memory_rss_mb": 7.8125,
+      "mean_latency_ms": 13.3897,
+      "p95_latency_ms": 13.8225,
+      "throughput_fps": 74.6843,
       "parameter_count": 3454529,
       "thresholds": {
         "max_latency_ms": 30.0,
@@ -71,10 +99,5 @@
       }
     }
   ],
-  "errors": [
-    {
-      "model": "bert-mini-sentiment_classifier.pt",
-      "error": "'BertEncoder' object has no attribute 'gradient_checkpointing'"
-    }
-  ]
+  "errors": []
 }

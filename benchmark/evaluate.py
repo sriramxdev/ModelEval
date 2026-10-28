@@ -103,18 +103,24 @@ def _benchmark_pytorch(path: Path) -> dict[str, Any]:
     else:
         raise ValueError(f"{path.name} must contain a serialized torch.nn.Module")
 
-    # Insert right before model.eval():
+    # --- COMPREHENSIVE ATTRIBUTE FIX FOR TRANSFORMERS / BERT ---
     if hasattr(model, "config"):
         if not hasattr(model.config, "torchscript"):
             model.config.torchscript = False
         if not hasattr(model.config, "return_dict"):
             model.config.return_dict = False
-    # Recursively inject missing embedding attributes across all submodules
+        if not hasattr(model.config, "_attn_implementation"):
+            model.config._attn_implementation = "eager"
+
+    # Set missing runtime attributes on the model and all submodules
     for module in model.modules():
-        if module.__class__.__name__ == "BertEmbeddings":
-            if not hasattr(module, "position_embedding_type"):
-                module.position_embedding_type = "absolute"
-                
+        if not hasattr(module, "attn_implementation"):
+            module.attn_implementation = "eager"
+        if not hasattr(module, "_attn_implementation"):
+            module._attn_implementation = "eager"
+        if not hasattr(module, "position_embedding_type"):
+            module.position_embedding_type = "absolute"
+
     model.eval()
     
     if spec.get("dtype") == "long":

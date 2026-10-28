@@ -99,15 +99,11 @@ Operational gates are configured in `configs/eval_config.json`:
 ```
 
 ### Gate Validation Policy
-
 A model checkpoint is declared **FAILED** and blocks the CI gate if any of the following occur:
-
-* $\text{Mean Latency} \ge \text{max\_latency\_ms}$
-* $\text{P95 Latency} \ge \text{max\_p95\_latency\_ms}$
-* $\text{Artifact Size} \ge \text{max\_model\_size\_mb}$
-* $\text{Memory RSS Growth} \ge \text{max\_memory\_rss\_mb}$
-
----
+- **Mean Latency:** `Mean Latency` $\ge$ `max_latency_ms`
+- **P95 Latency:** `P95 Latency` $\ge$ `max_p95_latency_ms`
+- **Artifact Size:** `Artifact Size` $\ge$ `max_model_size_mb`
+- **Memory RSS Growth:** `Memory RSS Growth` $\ge$ `max_memory_rss_mb`
 
 ## Repository Structure
 

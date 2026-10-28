@@ -1,6 +1,6 @@
 {
   "status": "FAILED",
-  "generated_at": "2026-10-28T01:05:54.250298+00:00",
+  "generated_at": "2026-10-28T01:12:29.803065+00:00",
   "warmup_passes": 10,
   "timed_passes": 50,
   "thresholds": {
@@ -22,10 +22,10 @@
         28
       ],
       "file_size_mb": 0.0039,
-      "memory_rss_mb": 5.1562,
-      "mean_latency_ms": 0.0336,
-      "p95_latency_ms": 0.0363,
-      "throughput_fps": 29781.5287,
+      "memory_rss_mb": 5.168,
+      "mean_latency_ms": 0.0541,
+      "p95_latency_ms": 0.0605,
+      "throughput_fps": 18492.5126,
       "parameter_count": 338,
       "thresholds": {
         "max_latency_ms": 5.0,
@@ -52,10 +52,10 @@
         3
       ],
       "file_size_mb": 39.6033,
-      "memory_rss_mb": 7.6328,
-      "mean_latency_ms": 13.9058,
-      "p95_latency_ms": 15.4892,
-      "throughput_fps": 71.9127,
+      "memory_rss_mb": 7.8594,
+      "mean_latency_ms": 17.1023,
+      "p95_latency_ms": 17.2966,
+      "throughput_fps": 58.4717,
       "parameter_count": 3454529,
       "thresholds": {
         "max_latency_ms": 30.0,
@@ -74,7 +74,7 @@
   "errors": [
     {
       "model": "bert-mini-sentiment_classifier.pt",
-      "error": "'BertEmbeddings' object has no attribute 'position_embedding_type'"
+      "error": "'BertModel' object has no attribute 'attn_implementation'"
     }
   ]
 }

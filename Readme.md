@@ -3,12 +3,13 @@
 [![CI/CD Gating Engine](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blue?logo=github-actions)](https://github.com/sriramxdev/ModelEval/actions)
 [![Environment: Pixi](https://img.shields.io/badge/Environment-Pixi%20%7C%20conda--forge-yellow)](https://pixi.sh)
 [![Frameworks](https://img.shields.io/badge/Frameworks-PyTorch%20%7C%20Keras-red)](https://pytorch.org)
-[![Telemetry Status](https://img.shields.io/badge/Status-PASSED-brightgreen)](#live-telemetry-dashboard)
+[![Live Telemetry Dashboard](https://img.shields.io/badge/Telemetry%20Dashboard-Live-success?logo=googlechrome&logoColor=white)](https://sriramxdev.github.io/ModelEval/)
+[![Status](https://img.shields.io/badge/Status-PASSED-brightgreen)](https://sriramxdev.github.io/ModelEval/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 An enterprise-grade, deterministic MLOps gating system engineered to continuously benchmark deep learning checkpoints (PyTorch & Keras), enforce operational SLA thresholds, and gate GitHub pull requests prior to production branch integration.
 
----
+> 📊 **Live Telemetry Dashboard:** [https://sriramxdev.github.io/ModelEval/](https://sriramxdev.github.io/ModelEval/)
 
 ## Overview
 

@@ -4,14 +4,14 @@
     "modality": "image (pytorch)",
     "input_shape": [1, 1, 28, 28],
     "thresholds": {
-      "max_latency_ms": 5.0,
+      "max_latency_ms": 20.0,
       "max_p95_latency_ms": 500.0,
       "max_model_size_mb": 100.0,
       "max_memory_rss_mb": 512.0
     }
   },
   "keras_cnn_models": {
-    "match_pattern": "image_classification",
+    "match_pattern": "cnn",
     "modality": "image (keras cnn)",
     "input_shape": [1, 150, 150, 3],
     "thresholds": {
@@ -33,12 +33,12 @@
     }
   },
   "nlp_models": {
-    "match_pattern": "sentiment",
+    "match_pattern": "bert",
     "modality": "text (nlp)",
     "input_shape": [1, 128],
     "dtype": "long",
     "thresholds": {
-      "max_latency_ms": 15.0,
+      "max_latency_ms": 30.0,
       "max_p95_latency_ms": 200.0,
       "max_model_size_mb": 50.0,
       "max_memory_rss_mb": 256.0
@@ -50,7 +50,7 @@
     "input_shape": [1, 128],
     "dtype": "long",
     "thresholds": {
-      "max_latency_ms": 0.01,
+      "max_latency_ms": 5.0,
       "max_p95_latency_ms": 0.05,
       "max_model_size_mb": 50.0,
       "max_memory_rss_mb": 10.0

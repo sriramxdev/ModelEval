@@ -1,6 +1,6 @@
 {
   "status": "FAILED",
-  "generated_at": "2026-10-27T07:28:50.861010+00:00",
+  "generated_at": "2026-10-28T01:05:54.250298+00:00",
   "warmup_passes": 10,
   "timed_passes": 50,
   "thresholds": {
@@ -22,10 +22,10 @@
         28
       ],
       "file_size_mb": 0.0039,
-      "memory_rss_mb": 5.1719,
-      "mean_latency_ms": 0.0195,
-      "p95_latency_ms": 0.0202,
-      "throughput_fps": 51182.8877,
+      "memory_rss_mb": 5.1562,
+      "mean_latency_ms": 0.0336,
+      "p95_latency_ms": 0.0363,
+      "throughput_fps": 29781.5287,
       "parameter_count": 338,
       "thresholds": {
         "max_latency_ms": 5.0,
@@ -41,8 +41,8 @@
       }
     },
     {
-      "model": "image_classification_CNN.keras",
-      "path": "models/image_classification_CNN.keras",
+      "model": "cnn_classification.keras",
+      "path": "models/cnn_classification.keras",
       "modality": "image (keras cnn)",
       "architecture": "Sequential",
       "input_shape": [
@@ -52,10 +52,10 @@
         3
       ],
       "file_size_mb": 39.6033,
-      "memory_rss_mb": 7.8906,
-      "mean_latency_ms": 6.8402,
-      "p95_latency_ms": 7.0767,
-      "throughput_fps": 146.1947,
+      "memory_rss_mb": 7.6328,
+      "mean_latency_ms": 13.9058,
+      "p95_latency_ms": 15.4892,
+      "throughput_fps": 71.9127,
       "parameter_count": 3454529,
       "thresholds": {
         "max_latency_ms": 30.0,
@@ -73,8 +73,8 @@
   ],
   "errors": [
     {
-      "model": "sentiment_classifier.pt",
-      "error": "'BertConfig' object has no attribute 'torchscript'"
+      "model": "bert-mini-sentiment_classifier.pt",
+      "error": "'BertEmbeddings' object has no attribute 'position_embedding_type'"
     }
   ]
 }
